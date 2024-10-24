@@ -1,0 +1,63 @@
+# importing the necessary libraries
+from flask import Flask, redirect, request, jsonify
+from google_auth_oauthlib.flow import Flow
+import os
+
+# Allow insecure transport for testing (remember to remove this in production)
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+
+# Initialize Flask app
+app = Flask("Seas The Day")
+
+# Google login initialization
+@app.route('/google-login', methods=['GET'])
+def google_login():
+    # Initialize the OAuth flow from your credentials JSON file
+    flow = Flow.from_client_secrets_file(
+        'json.file.json',
+        scopes=[
+            'openid',
+            'https://www.googleapis.com/auth/userinfo.email',
+            'https://www.googleapis.com/auth/userinfo.profile',
+        ],
+        redirect_uri='https://1f26-73-160-147-111.ngrok-free.app/oauth2callback'  # Replace with your redirect URI
+    )
+    
+    authorization_url, state = flow.authorization_url()
+    return redirect(authorization_url)
+
+# OAuth callback after login
+@app.route('/oauth2callback', methods=['GET'])
+def oauth2callback():
+    # Initialize the flow from the credentials JSON again to exchange the code
+    flow = Flow.from_client_secrets_file(
+        'json.file.json',
+        scopes=[
+            'openid',
+            'https://www.googleapis.com/auth/userinfo.email',
+            'https://www.googleapis.com/auth/userinfo.profile',
+        ],
+        redirect_uri='https://1f26-73-160-147-111.ngrok-free.app/oauth2callback'
+    )
+    
+    # Exchange authorization code for tokens
+    flow.fetch_token(authorization_response=request.url)
+    
+    # Get the user's credentials (tokens)
+    credentials = flow.credentials
+    
+    # Retrieve the user's information from the token
+    id_token = credentials.id_token
+    access_token = credentials.token
+    refresh_token = credentials.refresh_token
+
+    # For later use, you can also decode the ID token to get user info like name, email, etc.
+    # If you want to redirect back to the Swift app with these tokens:
+    app_redirect_url = f"seastheday://oauth2callback?access_token={access_token}&id_token={id_token}"
+    
+    # Redirect user back to Swift app
+    return redirect(app_redirect_url)
+
+if __name__ == '__main__':
+    app.run(port=5000, debug=True)
+
