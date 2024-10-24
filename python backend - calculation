@@ -1,0 +1,48 @@
+from flask import Flask, request, jsonify
+from flask_cors import CORS  # type: ignore # Enable CORS for cross-origin requests
+
+app = Flask("Seas The Day")
+CORS(app)  # Allow cross-origin requests
+
+# Function to calculate seabirds saved
+def calculate_seabirds_saved(plastic_weight):
+    seabirds_saved = plastic_weight * 0.1
+    return int(seabirds_saved)
+
+# Function to calculate whales saved
+def calculate_whales_saved(trash_weight):
+    whales_saved = trash_weight / 20
+    return int(round(whales_saved))
+
+# Function to calculate beach square feet saved
+def calculate_beach_sq_ft_saved(trash_weight, plastic_weight):
+    beach_sq_ft_saved = trash_weight + plastic_weight
+    return beach_sq_ft_saved
+
+# Route for saving seabirds
+@app.route('/save_seabirds', methods=['POST'])
+def save_seabirds():
+    data = request.json
+    plastic_weight = float(data.get('plastic_weight', 0))
+    seabirds_saved = calculate_seabirds_saved(plastic_weight)
+    return jsonify({"seabirds_saved": seabirds_saved})
+
+# Route for saving whales
+@app.route('/save_whales', methods=['POST'])
+def save_whales():
+    data = request.json
+    trash_weight = float(data.get('trash_weight', 0))
+    whales_saved = calculate_whales_saved(trash_weight)
+    return jsonify({"whales_saved": whales_saved})
+
+# Route for saving beach square feet
+@app.route('/save_beach', methods=['POST'])
+def save_beach():
+    data = request.json
+    plastic_weight = float(data.get('plastic_weight', 0))
+    trash_weight = float(data.get('trash_weight', 0))
+    beach_sq_ft_saved = calculate_beach_sq_ft_saved(trash_weight, plastic_weight)
+    return jsonify({"beach_sq_ft_saved": beach_sq_ft_saved})
+
+if __name__ == '__main__':
+    app.run(debug=True)
